@@ -1,4 +1,3 @@
-#![allow(clippy::assign_op_pattern)]
 #![no_main]
 #![no_std]
 
@@ -9,7 +8,7 @@ use panic_rtt_target as _;
 use rtt_target::rtt_init_print;
 
 use core::cell::RefCell;
-use cortex_m::interrupt::Mutex;
+use cortex_m::{asm, interrupt::Mutex};
 use cortex_m_rt::entry;
 use microbit::{
     board::Board,
@@ -34,6 +33,10 @@ fn main() -> ! {
     rtt_init_print!();
     let board = Board::take().unwrap();
     let mut delay = Timer::new(board.TIMER1);
+    let buttons = [
+        board.buttons.button_a.degrade(),
+        board.buttons.button_b.degrade(),
+    ];
 
     cortex_m::interrupt::free(|cs| {
         let mut display = Display::new(board.TIMER0, board.display_pins);
@@ -48,22 +51,25 @@ fn main() -> ! {
     });
 
 
-    let tick = 250;
+    let tick = 50;
+    let mut game = GameState::new(tick);
     loop {
-        //rprintln!("start");
-        let mut game = GameState::new(tick);
-        loop {
-            let mut raster = Raster::default();
-            if game.step(&mut raster, true) {
-                break;
-            }
-            let frame = GreyscaleImage::new(&raster);
-            cortex_m::interrupt::free(|cs| {
-                let mut d = DISPLAY.borrow(cs).borrow_mut();
-                d.as_mut().unwrap().show(&frame);
-            });
-            //rprintln!("tick");
-            delay.delay_ms(tick);
+        let mut raster = Raster::default();
+        let bs = core::array::from_fn(|i| {
+            buttons[i].is_low().unwrap()
+        });
+        if game.step(&mut raster, Some(bs)) {
+            break;
         }
+        let frame = GreyscaleImage::new(&raster);
+        cortex_m::interrupt::free(|cs| {
+            let mut d = DISPLAY.borrow(cs).borrow_mut();
+            d.as_mut().unwrap().show(&frame);
+        });
+        //rprintln!("tick");
+        delay.delay_ms(tick);
+    }
+    loop {
+        asm::wfi();
     }
 }

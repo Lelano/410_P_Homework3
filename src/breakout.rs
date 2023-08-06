@@ -1,6 +1,10 @@
+//! Breakout game proper. Assumes a 5×5 LED array in row-major order,
+//! with 0, 0 at top left and integer brightness *b* with `0 ≤ b ≤ 9`.
+
 use libm::*;
 //use rtt_target::rprintln;
 
+/// State variables of current game.
 pub struct GameState {
     blocks: [u8; 5],
     ball_position: [f32; 2],
@@ -12,9 +16,14 @@ pub struct GameState {
     ball_count: u8,
 }
 
+/// LED array proxy for rendering.
 pub type Raster = [[u8; 5]; 5];
 
 impl GameState {
+    // Make a new starting `GameState` with game velocities
+    // determined by the given `tick` (in milliseconds). See
+    // [set_tick()] and [reset_ball()] for game state
+    // updates.
     pub fn new(tick: u16) -> Self {
         let mut result = Self {
             blocks: [2; 5],
@@ -22,7 +31,7 @@ impl GameState {
             ball_direction: [0.0, 0.0],
             ball_velocity: 0.0,
             paddle_position: 2.5,
-            paddle_width: 1.8,
+            paddle_width: 2.1,
             paddle_velocity: 0.0,
             ball_count: 3,
         };
@@ -42,7 +51,11 @@ impl GameState {
         self.ball_direction = [-sinf(1.2), cosf(1.2)];
     }
 
-    pub fn step(&mut self, raster: &mut Raster, attract_mode: bool) -> bool {
+    pub fn step(
+        &mut self,
+        raster: &mut Raster,
+        buttons: Option<[bool; 2]>,
+    ) -> bool {
         let coords = self.ball_position
             .iter_mut()
             .zip(self.ball_direction.iter_mut());
@@ -53,11 +66,20 @@ impl GameState {
         let [ur, uc] = [r, c].map(|x| (floorf(x + 0.5) as usize).clamp(0, 4));
 
         let pw = self.paddle_width;
-        let pp = self.paddle_position;
+        let mut pp = self.paddle_position;
+        if let Some(bs) = buttons {
+            let dirn = match bs {
+                [true, false] => -1.0,
+                [false, true] => 1.0,
+                _ => 0.0,
+            };
+            pp = (pp + self.paddle_velocity * dirn).clamp(0.1, 4.9);
+            self.paddle_position = pp;
+        }
 
         let [ref mut dr, ref mut dc] = self.ball_direction;
         let ball_count = self.ball_count;
-        if !attract_mode && r > 4.25 && *dr > 0.0 {
+        if buttons.is_none() && r > 4.25 && *dr > 0.0 {
             if self.ball_count > 0 {
                 self.ball_count -= 1;
             } else {
@@ -68,7 +90,7 @@ impl GameState {
         } else if ur == 1 && self.blocks[uc] > 0 {
             self.blocks[uc] -= 1;
             *dr = -*dr;
-        } else if ur == 0 && fabsf(pp - c) < 0.5 * pw {
+        } else if r < 1.5 && *dr > 0.0 && fabsf(pp - c) < 0.5 * pw {
             *dr = -*dr;
         }
         if !(0.001..=4.999).contains(&c) {
