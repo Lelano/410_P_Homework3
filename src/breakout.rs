@@ -44,18 +44,17 @@ impl GameState {
         let [r, c] = self.ball_position;
         let [ur, uc] = [r, c].map(|x| (floorf(x + 0.5) as usize).clamp(0, 4));
 
+        let pw = self.paddle_width;
+        let pp = self.paddle_position;
+
         let [ref mut dr, ref mut dc] = self.ball_direction;
         if !(0.001..=4.999).contains(&r) {
            *dr = -*dr;
         } else if ur == 3 && self.blocks[uc] > 0 {
             self.blocks[uc] -= 1;
             *dr = -*dr;
-        } else {
-            let pw = self.paddle_width;
-            let pp = self.paddle_position;
-            if ur == 0 && fabsf(pp - c) < 0.5 * pw {
-                *dr = -*dr;
-            }
+        } else if ur == 0 && fabsf(pp - c) < 0.5 * pw {
+            *dr = -*dr;
         }
         if !(0.001..=4.999).contains(&c) {
             *dc = -*dc;
