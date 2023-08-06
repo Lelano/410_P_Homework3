@@ -1,3 +1,4 @@
+#![allow(clippy::assign_op_pattern)]
 #![no_main]
 #![no_std]
 
@@ -45,13 +46,13 @@ fn main() -> ! {
     });
 
 
-    let tick = 100u8;
+    let tick = 50u8;
     let _paddle_width = 1.5;
 
     let mut _blocks = [[2; 5]; 2];
     let mut ball_position = (2.0, 3.0);
-    let ball_direction = (1.0, 0.0);
-    let ball_velocity = 0.1;
+    let mut ball_direction = (0.8, 0.2);
+    let ball_velocity = 0.4;
     let mut _paddle_position = 2.5;
     let mut _paddle_velocity = 0.3;
     let mut _ball_count = 0;
@@ -79,11 +80,20 @@ fn main() -> ! {
         });
                                   
         let (r, c) = ball_position;
-        let (dr, dc) = ball_direction;
-        let (r, c) = (
+        let (mut dr, mut dc) = ball_direction;
+        let (mut r, mut c) = (
             r + dr * ball_velocity,
             c + dc * ball_velocity,
         );
+        if !(0.0..5.0).contains(&r) {
+            r = r.clamp(0.0, 5.0);
+            dr = -dr;
+        }
+        if !(0.0..5.0).contains(&c) {
+            c = c.clamp(0.0, 5.0);
+            dc = -dc;
+        }
+        ball_direction = (dr, dc);
         ball_position = (r, c);
 
         delay.delay_ms(tick);
