@@ -2,13 +2,15 @@
 #![no_main]
 #![no_std]
 
+mod breakout;
+use breakout::*;
+
 use panic_rtt_target as _;
-use rtt_target::rtt_init_print;
+use rtt_target::{rprintln, rtt_init_print};
 
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 use cortex_m_rt::entry;
-use libm::*;
 use microbit::{
     board::Board,
     display::nonblocking::{Display, GreyscaleImage},
@@ -46,56 +48,22 @@ fn main() -> ! {
     });
 
 
-    let tick = 50u8;
-    let _paddle_width = 1.5;
-
-    let mut _blocks = [[2; 5]; 2];
-    let mut ball_position = (2.0, 3.0);
-    let mut ball_direction = (0.8, 0.2);
-    let ball_velocity = 0.4;
-    let mut _paddle_position = 2.5;
-    let mut _paddle_velocity = 0.3;
-    let mut _ball_count = 0;
-
+    let tick = 250;
     loop {
-        let mut raster = [
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-        ];
-
-        
-        let round = |v: f32| floorf(v + 0.5).clamp(0.0, 4.0) as usize;
-
-        let (r, c) = ball_position;
-        let (r, c) = (round(r), round(c));
-        raster[r][c] = 9;
-        let image = GreyscaleImage::new(&raster);
-        cortex_m::interrupt::free(|cs| {
-            if let Some(d) = DISPLAY.borrow(cs).borrow_mut().as_mut() {
-                d.show(&image);
+        rprintln!("start");
+        let mut game = GameState::default();
+        loop {
+            let mut raster = Raster::default();
+            if game.step(&mut raster, tick) {
+                break;
             }
-        });
-                                  
-        let (r, c) = ball_position;
-        let (mut dr, mut dc) = ball_direction;
-        let (mut r, mut c) = (
-            r + dr * ball_velocity,
-            c + dc * ball_velocity,
-        );
-        if !(0.0..5.0).contains(&r) {
-            r = r.clamp(0.0, 5.0);
-            dr = -dr;
+            let frame = GreyscaleImage::new(&raster);
+            cortex_m::interrupt::free(|cs| {
+                let mut d = DISPLAY.borrow(cs).borrow_mut();
+                d.as_mut().unwrap().show(&frame);
+            });
+            //rprintln!("tick");
+            delay.delay_ms(tick);
         }
-        if !(0.0..5.0).contains(&c) {
-            c = c.clamp(0.0, 5.0);
-            dc = -dc;
-        }
-        ball_direction = (dr, dc);
-        ball_position = (r, c);
-
-        delay.delay_ms(tick);
     }
 }
