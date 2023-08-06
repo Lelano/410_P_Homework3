@@ -6,7 +6,7 @@ mod breakout;
 use breakout::*;
 
 use panic_rtt_target as _;
-use rtt_target::{rprintln, rtt_init_print};
+use rtt_target::rtt_init_print;
 
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
@@ -50,11 +50,11 @@ fn main() -> ! {
 
     let tick = 250;
     loop {
-        rprintln!("start");
-        let mut game = GameState::default();
+        //rprintln!("start");
+        let mut game = GameState::new(tick);
         loop {
             let mut raster = Raster::default();
-            if game.step(&mut raster, tick) {
+            if game.step(&mut raster, true) {
                 break;
             }
             let frame = GreyscaleImage::new(&raster);
