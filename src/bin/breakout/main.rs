@@ -13,7 +13,7 @@ use cortex_m_rt::entry;
 use microbit::{
     board::Board,
     display::nonblocking::{Display, GreyscaleImage},
-    hal::{prelude::*, Timer},
+    hal::{prelude::*, Saadc, saadc::SaadcConfig, Timer},
     pac::{self, interrupt, TIMER0},
 };
 
@@ -33,10 +33,8 @@ fn main() -> ! {
     rtt_init_print!();
     let board = Board::take().unwrap();
     let mut delay = Timer::new(board.TIMER1);
-    let buttons = [
-        board.buttons.button_a.degrade(),
-        board.buttons.button_b.degrade(),
-    ];
+    let mut saadc = Saadc::new(board.SAADC, SaadcConfig::default());
+    let mut knob_pin = board.pins.p0_02.into_floating_input();
 
     cortex_m::interrupt::free(|cs| {
         let mut display = Display::new(board.TIMER0, board.display_pins);
@@ -55,10 +53,14 @@ fn main() -> ! {
     let mut game = GameState::new(tick);
     loop {
         let mut raster = Raster::default();
-        let bs = core::array::from_fn(|i| {
-            buttons[i].is_low().unwrap()
-        });
-        if game.step(&mut raster, Some(bs)) {
+        let k: i16 = saadc.read(&mut knob_pin).unwrap();
+        let k = (k as f32 / (1 << 14) as f32).clamp(0.3, 0.7);
+        let k = if k < 0.1 {
+            None
+        } else {
+            Some(((k - 0.3) * (1.0 / 0.4)).clamp(0.0, 1.0))
+        };
+        if game.step(&mut raster, k) {
             break;
         }
         let frame = GreyscaleImage::new(&raster);

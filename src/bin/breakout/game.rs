@@ -12,7 +12,6 @@ pub struct GameState {
     ball_velocity: f32,
     paddle_position: f32,
     paddle_width: f32,
-    paddle_velocity: f32,
     ball_count: u8,
 }
 
@@ -32,7 +31,6 @@ impl GameState {
             ball_velocity: 0.0,
             paddle_position: 2.5,
             paddle_width: 2.1,
-            paddle_velocity: 0.0,
             ball_count: 3,
         };
         result.reset_ball();
@@ -43,7 +41,6 @@ impl GameState {
     pub fn set_tick(&mut self, tick: u16) {
         let tick = 0.001 * tick as f32;
         self.ball_velocity = (5.0 * tick).min(0.75);
-        self.paddle_velocity = 5.0 * tick;
     }
 
     fn reset_ball(&mut self) {
@@ -54,7 +51,7 @@ impl GameState {
     pub fn step(
         &mut self,
         raster: &mut Raster,
-        buttons: Option<[bool; 2]>,
+        knob: Option<f32>,
     ) -> bool {
         let coords = self.ball_position
             .iter_mut()
@@ -67,19 +64,14 @@ impl GameState {
 
         let pw = self.paddle_width;
         let mut pp = self.paddle_position;
-        if let Some(bs) = buttons {
-            let dirn = match bs {
-                [true, false] => -1.0,
-                [false, true] => 1.0,
-                _ => 0.0,
-            };
-            pp = (pp + self.paddle_velocity * dirn).clamp(0.1, 4.9);
+        if let Some(bs) = knob {
+            pp = 5.0 * bs;
             self.paddle_position = pp;
         }
 
         let [ref mut dr, ref mut dc] = self.ball_direction;
         let ball_count = self.ball_count;
-        if buttons.is_none() && r > 4.25 && *dr > 0.0 {
+        if knob.is_none() && r > 4.25 && *dr > 0.0 {
             if self.ball_count > 0 {
                 self.ball_count -= 1;
             } else {
