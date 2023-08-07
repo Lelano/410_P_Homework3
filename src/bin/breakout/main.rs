@@ -1,8 +1,8 @@
 #![no_main]
 #![no_std]
 
-mod breakout;
-use breakout::*;
+mod game;
+use game::*;
 
 use panic_rtt_target as _;
 use rtt_target::rtt_init_print;
