@@ -5,17 +5,19 @@ pub const BEEP_PERIOD: u16 = 2000;
 #[macro_export]
 macro_rules! microbit_beep {
     ($timer:ident) => {
-        pub static BEEP: Mutex<RefCell<Option<Beep>>> = Mutex::new(RefCell::new(None));
+        pub static BEEP: cortex_m::interrupt::Mutex<RefCell<Option<Beep>>> = cortex_m::interrupt::Mutex::new(RefCell::new(None));
 
         pub struct Beep {
-            beep_timer: Timer<$timer, OneShot>,
-            speaker_pin: Pin<Output<PushPull>>,
+            beep_timer: microbit::hal::Timer<$timer, microbit::hal::timer::OneShot>,
+            speaker_pin: microbit::hal::gpio::Pin<microbit::hal::gpio::Output<microbit::hal::gpio::PushPull>>,
             pin_high: bool,
             note_time: u32,
         }
 
         impl Beep {
-            pub fn new(beep_timer: $timer, speaker_pin: Pin<Disconnected>) -> Self {
+            pub fn new(beep_timer: $timer, speaker_pin: microbit::hal::gpio::Pin<microbit::hal::gpio::Disconnected>) -> Self {
+                use microbit::hal::{Timer, gpio::Level};
+
                 Self {
                     beep_timer: Timer::new(beep_timer),
                     speaker_pin: speaker_pin.into_push_pull_output(Level::Low),
@@ -27,6 +29,8 @@ macro_rules! microbit_beep {
 
         #[interrupt]
         fn $timer() {
+            use embedded_hal::timer::Cancel;
+            use microbit::hal::prelude::*;
             cortex_m::interrupt::free(|cs| {
                 if let Some(b) = BEEP.borrow(cs).borrow_mut().as_mut() {
                     if b.note_time == 0 {
@@ -46,14 +50,14 @@ macro_rules! microbit_beep {
             });
         }
 
-        pub fn init_beep(beep_timer: $timer, speaker_pin: Pin<Disconnected>) {
+        pub fn init_beep(beep_timer: $timer, speaker_pin: microbit::hal::gpio::Pin<microbit::hal::gpio::Disconnected>) {
             cortex_m::interrupt::free(|cs| {
                 let mut beep = Beep::new(beep_timer, speaker_pin);
                 beep.beep_timer.enable_interrupt();
                 *BEEP.borrow(cs).borrow_mut() = Some(beep);
 
                 unsafe {
-                    pac::NVIC::unmask(pac::Interrupt::$timer);
+                    microbit::pac::NVIC::unmask(microbit::pac::Interrupt::$timer);
                 }
             });
         }
@@ -61,6 +65,7 @@ macro_rules! microbit_beep {
 }
 
 pub fn beep() {
+    use embedded_hal::prelude::*;
     cortex_m::interrupt::free(|cs| {
         if let Some(b) = BEEP.borrow(cs).borrow_mut().as_mut() {
             b.note_time = 40;

@@ -70,7 +70,7 @@ impl GameState {
 
         let [ref mut dr, ref mut dc] = self.ball_direction;
         let ball_count = self.ball_count;
-        if knob.is_none() && r > 4.25 && *dr > 0.0 {
+        if knob.is_some() && r > 4.25 && *dr > 0.0 {
             if self.ball_count > 0 {
                 self.ball_count -= 1;
             } else {
