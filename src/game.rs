@@ -1,6 +1,8 @@
 //! Breakout game proper. Assumes a 5×5 LED array in row-major order,
 //! with 0, 0 at top left and integer brightness *b* with `0 ≤ b ≤ 9`.
 
+use crate::*;
+
 use libm::*;
 //use rtt_target::rprintln;
 
@@ -14,9 +16,6 @@ pub struct GameState {
     paddle_width: f32,
     ball_count: u8,
 }
-
-/// LED array proxy for rendering.
-pub type Raster = [[u8; 5]; 5];
 
 impl GameState {
     // Make a new starting `GameState` with game velocities
