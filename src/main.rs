@@ -1,14 +1,14 @@
 #![no_main]
 #![no_std]
 
-mod game;
-mod display;
 mod beep;
+mod display;
+mod game;
 mod knob;
 
-use game::*;
-use display::*;
 use beep::*;
+use display::*;
+use game::*;
 use knob::*;
 
 use panic_rtt_target as _;
@@ -37,7 +37,6 @@ fn main() -> ! {
     let display_pins = board.display_pins;
     let saadc = board.SAADC;
     let knob_pin = board.pins.p0_02;
-
 
     init_display(display_timer, display_pins);
     init_beep(beep_timer, speaker_pin.degrade());

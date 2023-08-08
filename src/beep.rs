@@ -5,18 +5,24 @@ pub const BEEP_PERIOD: u16 = 2000;
 #[macro_export]
 macro_rules! microbit_beep {
     ($timer:ident) => {
-        pub static BEEP: cortex_m::interrupt::Mutex<RefCell<Option<Beep>>> = cortex_m::interrupt::Mutex::new(RefCell::new(None));
+        pub static BEEP: cortex_m::interrupt::Mutex<RefCell<Option<Beep>>> =
+            cortex_m::interrupt::Mutex::new(RefCell::new(None));
 
         pub struct Beep {
             beep_timer: microbit::hal::Timer<$timer, microbit::hal::timer::OneShot>,
-            speaker_pin: microbit::hal::gpio::Pin<microbit::hal::gpio::Output<microbit::hal::gpio::PushPull>>,
+            speaker_pin: microbit::hal::gpio::Pin<
+                microbit::hal::gpio::Output<microbit::hal::gpio::PushPull>,
+            >,
             pin_high: bool,
             note_time: u32,
         }
 
         impl Beep {
-            pub fn new(beep_timer: $timer, speaker_pin: microbit::hal::gpio::Pin<microbit::hal::gpio::Disconnected>) -> Self {
-                use microbit::hal::{Timer, gpio::Level};
+            pub fn new(
+                beep_timer: $timer,
+                speaker_pin: microbit::hal::gpio::Pin<microbit::hal::gpio::Disconnected>,
+            ) -> Self {
+                use microbit::hal::{gpio::Level, Timer};
 
                 Self {
                     beep_timer: Timer::new(beep_timer),
@@ -50,7 +56,10 @@ macro_rules! microbit_beep {
             });
         }
 
-        pub fn init_beep(beep_timer: $timer, speaker_pin: microbit::hal::gpio::Pin<microbit::hal::gpio::Disconnected>) {
+        pub fn init_beep(
+            beep_timer: $timer,
+            speaker_pin: microbit::hal::gpio::Pin<microbit::hal::gpio::Disconnected>,
+        ) {
             cortex_m::interrupt::free(|cs| {
                 let mut beep = Beep::new(beep_timer, speaker_pin);
                 beep.beep_timer.enable_interrupt();

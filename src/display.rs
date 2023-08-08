@@ -8,8 +8,9 @@ pub type Raster = [[u8; 5]; 5];
 #[macro_export]
 macro_rules! microbit_display {
     ($timer:ident) => {
-        pub static DISPLAY: cortex_m::interrupt::Mutex<RefCell<Option<microbit::display::nonblocking::Display<$timer>>>> =
-            cortex_m::interrupt::Mutex::new(RefCell::new(None));
+        pub static DISPLAY: cortex_m::interrupt::Mutex<
+            RefCell<Option<microbit::display::nonblocking::Display<$timer>>>,
+        > = cortex_m::interrupt::Mutex::new(RefCell::new(None));
 
         #[interrupt]
         fn $timer() {
@@ -35,7 +36,6 @@ macro_rules! microbit_display {
         }
     };
 }
-
 
 pub fn display_frame(raster: &Raster) {
     let frame = GreyscaleImage::new(raster);

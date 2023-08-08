@@ -47,12 +47,9 @@ impl GameState {
         self.ball_direction = [-sinf(1.2), cosf(1.2)];
     }
 
-    pub fn step(
-        &mut self,
-        raster: &mut Raster,
-        knob: Option<f32>,
-    ) -> bool {
-        let coords = self.ball_position
+    pub fn step(&mut self, raster: &mut Raster, knob: Option<f32>) -> bool {
+        let coords = self
+            .ball_position
             .iter_mut()
             .zip(self.ball_direction.iter_mut());
         for (x, dx) in coords {
