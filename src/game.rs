@@ -6,8 +6,6 @@ use crate::*;
 use libm::*;
 //use rtt_target::rprintln;
 
-//! Breakout game code.
-
 /// State variables of current game.
 pub struct GameState {
     /// Row of blocks to be broken out.
