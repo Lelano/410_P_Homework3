@@ -1,3 +1,5 @@
+//! Breakout game demo for the MicroBit v2.
+
 #![no_main]
 #![no_std]
 
@@ -29,6 +31,8 @@ microbit_beep!(TIMER2);
 #[entry]
 fn main() -> ! {
     rtt_init_print!();
+
+    // Get neeeded peripherals from board.
     let board = Board::take().unwrap();
     let display_timer = board.TIMER0;
     let mut delay = Timer::new(board.TIMER1);
@@ -38,15 +42,20 @@ fn main() -> ! {
     let saadc = board.SAADC;
     let knob_pin = board.pins.p0_02;
 
+    // Set up our custom peripherals.
     init_display(display_timer, display_pins);
     init_beep(beep_timer, speaker_pin.degrade());
     let knob = Knob::new(saadc, knob_pin);
 
+    // Prove that beep works. Twice.
     beep();
     delay.delay_ms(250u16);
     beep();
 
+    // Tick time in milliseconds.
     let tick = 50;
+
+    // Set up and run a game.
     let mut game = GameState::new(tick);
     loop {
         let mut raster = Raster::default();
@@ -57,6 +66,8 @@ fn main() -> ! {
         display_frame(&raster);
         delay.delay_ms(tick);
     }
+
+    // Wait for a reset.
     loop {
         asm::wfi();
     }

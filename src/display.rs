@@ -1,3 +1,5 @@
+//! Generic MicroBit v2 nonblocking display handler.
+
 use crate::*;
 
 use microbit::display::nonblocking::GreyscaleImage;
@@ -5,13 +7,18 @@ use microbit::display::nonblocking::GreyscaleImage;
 /// LED array proxy for rendering.
 pub type Raster = [[u8; 5]; 5];
 
+/// Macro for declaring the stuff needed for the non-blocking display.
+///
+/// Argument is which timer to be used, in all caps: for example, `TIMER0`.
 #[macro_export]
 macro_rules! microbit_display {
     ($timer:ident) => {
+        /// Global state of display.
         pub static DISPLAY: cortex_m::interrupt::Mutex<
             RefCell<Option<microbit::display::nonblocking::Display<$timer>>>,
         > = cortex_m::interrupt::Mutex::new(RefCell::new(None));
 
+        /// Display timer handler.
         #[interrupt]
         fn $timer() {
             cortex_m::interrupt::free(|cs| {
@@ -21,6 +28,7 @@ macro_rules! microbit_display {
             });
         }
 
+        /// Set up the display. This must be called before first use.
         pub fn init_display(timer: $timer, display_pins: microbit::gpio::DisplayPins) {
             use microbit::display::nonblocking::{Display, GreyscaleImage};
 
@@ -37,6 +45,7 @@ macro_rules! microbit_display {
     };
 }
 
+/// Display a frame.
 pub fn display_frame(raster: &Raster) {
     let frame = GreyscaleImage::new(raster);
     cortex_m::interrupt::free(|cs| {
