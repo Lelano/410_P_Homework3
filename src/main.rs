@@ -6,10 +6,10 @@ mod display;
 mod game;
 mod knob;
 
-use beep::*;
-use display::*;
-use game::*;
-use knob::*;
+use beep::{beep, BEEP_PERIOD};
+use display::{display_frame, Raster};
+use game::GameState;
+use knob::Knob;
 
 use panic_rtt_target as _;
 use rtt_target::rtt_init_print;
