@@ -132,7 +132,7 @@ impl GameState {
         for c in 0..5 {
             if self.blocks[c] > 0 {
                 if self.blocks[c] == 1 {
-                    //Block is half life.
+                    //Block is half life, so dim it.
                     raster[1][c] = 6;
                 } else {
                     raster[1][c] = 9;

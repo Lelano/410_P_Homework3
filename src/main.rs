@@ -46,10 +46,11 @@ fn main() -> ! {
     init_display(display_timer, display_pins);
     init_beep(beep_timer, speaker_pin.degrade());
     let knob = Knob::new(saadc, knob_pin);
-    // For tracking if the knob is being used.
+    // Buttong tracking, blp = button last postition
+    // bnp = button next position.
     let mut blp:f32 = 0.5f32;
     let mut bnp:f32 = 0.5f32;
-    //Default Value
+    // Knob tracking
     let mut knob_last:Option<f32> = None;
     let mut knob_active:bool = true;
 
@@ -63,7 +64,10 @@ fn main() -> ! {
         let mut raster = Raster::default();
         let k = knob.read();
 
-      
+        // Checks that k and knob_last are not none, then if the 
+        // k is 0.05 or more away from knob_last, knob control is
+        // considered active. A range is neccesary becase the voltage 
+        // fluctuates on the pin.
         if let Some(curr_k) = k {
              if let Some(curr_kl) = knob_last {
                  if (curr_kl + 0.05 < curr_k ) || (curr_kl - 0.05 > curr_k ) {
@@ -76,7 +80,9 @@ fn main() -> ! {
         
         knob_last = k;
         
- 
+        // Check if buttons are being pressed.
+        // If the knob is off and a button is pressed
+        // the control switches to buttons.
         if board.buttons.button_a.is_low().unwrap() {
             if k == None {knob_active = false;}
             if blp > 0.1 {bnp = blp - 0.1;} 
