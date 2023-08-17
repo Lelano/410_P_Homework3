@@ -47,11 +47,6 @@ fn main() -> ! {
     init_beep(beep_timer, speaker_pin.degrade());
     let knob = Knob::new(saadc, knob_pin);
 
-    // Prove that beep works. Twice.
-    beep();
-    delay.delay_ms(250u16);
-    beep();
-
     // Tick time in milliseconds.
     let tick = 50;
 
@@ -66,6 +61,13 @@ fn main() -> ! {
         display_frame(&raster);
         delay.delay_ms(tick);
     }
+
+    //Game over, beep three times.
+    beep();
+    delay.delay_ms(250u16);
+    beep();
+    delay.delay_ms(250u16);
+    beep();
 
     // Wait for a reset.
     loop {

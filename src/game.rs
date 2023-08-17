@@ -83,6 +83,7 @@ impl GameState {
         // Move the paddle and record its new position.
         let pw = self.paddle_width;
         let mut pp = self.paddle_position;
+        
         if let Some(bs) = knob {
             pp = 5.0 * bs;
             self.paddle_position = pp;
@@ -106,6 +107,9 @@ impl GameState {
             // Block hit.
             self.blocks[uc] -= 1;
             *dr = -*dr;
+            //Beep
+            beep();
+
         } else if r < 1.5 && *dr > 0.0 && fabsf(pp - c) < 0.5 * pw {
             // Paddle bounce.
             *dr = -*dr;
@@ -127,7 +131,12 @@ impl GameState {
         // Render blocks and paddle.
         for c in 0..5 {
             if self.blocks[c] > 0 {
-                raster[1][c] = 9;
+                if self.blocks[c] == 1 {
+                    //Block is half life.
+                    raster[1][c] = 6;
+                } else {
+                    raster[1][c] = 9;
+                }
             }
 
             if fabsf(c as f32 - pp) < 0.5 * pw {
