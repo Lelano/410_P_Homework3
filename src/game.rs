@@ -38,7 +38,7 @@ impl GameState {
             ball_direction: [0.0, 0.0],
             ball_velocity: 0.0,
             paddle_position: 2.5,
-            paddle_width: 2.5, //Was 2.1
+            paddle_width: 2.1, //Was 2.1
             ball_count: 3,
         };
 

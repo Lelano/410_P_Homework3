@@ -46,18 +46,67 @@ fn main() -> ! {
     init_display(display_timer, display_pins);
     init_beep(beep_timer, speaker_pin.degrade());
     let knob = Knob::new(saadc, knob_pin);
+    // For tracking if the knob is being used.
+    let mut blp:f32 = 0.5f32;
+    let mut bnp:f32 = 0.5f32;
+    //Default Value
+    let mut knob_last:Option<f32> = None;
+    let mut knob_active:bool = true;
 
     // Tick time in milliseconds.
     let tick = 50;
-
     // Set up and run a game.
     let mut game = GameState::new(tick);
+
     loop {
+
         let mut raster = Raster::default();
         let k = knob.read();
-        if game.step(&mut raster, k) {
-            break;
+
+      
+        if let Some(curr_k) = k {
+             if let Some(curr_kl) = knob_last {
+                 if (curr_kl + 0.05 < curr_k ) || (curr_kl - 0.05 > curr_k ) {
+                     knob_active = true;
+                 } else {
+                     knob_active = false;
+                 }
+             }
         }
+        
+        knob_last = k;
+        
+ 
+        if board.buttons.button_a.is_low().unwrap() {
+            if k == None {knob_active = false;}
+            if blp > 0.1 {bnp = blp - 0.1;} 
+        }
+        if board.buttons.button_b.is_low().unwrap() {
+            if k == None {knob_active = false;}
+            if blp < 0.9 {bnp = blp + 0.1;}
+        }
+
+        blp = bnp;
+
+        // Set the last knob position.
+        if knob_active {
+            if let Some(curr_k) = k {
+                blp = curr_k;
+                bnp = curr_k;
+            }
+            
+        } 
+
+        if knob_active {
+            if game.step(&mut raster, k) {
+                break;
+            }
+        } else {
+            if game.step(&mut raster, Some(bnp)) {
+                break;
+            }
+        }
+
         display_frame(&raster);
         delay.delay_ms(tick);
     }
